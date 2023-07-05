@@ -7,15 +7,16 @@ import time
 
 FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfzkv9bvaDEVAzFlyeVGQ9s-6fGy1YJJpNHpExAPenu9qtHqg/viewform?usp=sf_link"
 DATA_URL = "https://www.zillow.com/homes/for_rent/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22mapBounds%22%3A%7B%22west%22%3A-122.53615416479492%2C%22east%22%3A-122.33531035375977%2C%22south%22%3A37.70945520980244%2C%22north%22%3A37.81720606103099%7D%2C%22mapZoom%22%3A13%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22price%22%3A%7B%22max%22%3A391526%7D%2C%22beds%22%3A%7B%22min%22%3A1%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22mp%22%3A%7B%22max%22%3A2000%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22fr%22%3A%7B%22value%22%3Atrue%7D%2C%22fsbo%22%3A%7B%22value%22%3Afalse%7D%2C%22cmsn%22%3A%7B%22value%22%3Afalse%7D%2C%22fsba%22%3A%7B%22value%22%3Afalse%7D%7D%2C%22isListVisible%22%3Atrue%7D"
-headers = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Safari/605.1.15",
-    "Accept-Language": "en-GB,en;q=0.9,de;q=0.8,en-US;q=0.7",
-}
+
+# Chrome options for Selenium
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
+
+# Chrome WebDriver service
 service = Service(r"C:\Users\infam\OneDrive\Desktop\dev\chromedriver.exe")
 
 
+# Function to retrieve web page content and store it in a file
 def get_web_page(file, url):
     try:
         open(file)
@@ -37,11 +38,10 @@ def get_web_page(file, url):
         return BeautifulSoup(content, "html.parser")
 
 
-# fetch the website and collect links, addresses and prices for each listing in separate lists
-# response = requests.get(DATA_URL, headers=headers)
-# web_page = response.text
+# Get web page content using BeautifulSoup
 soup = get_web_page(file="web_page.html", url=DATA_URL)
 
+# Extract property links and addresses from the web page
 link_tags = soup.select('a[data-test="property-card-link"]')
 links = [link.get("href") for link in link_tags if link.get("tabindex") == "0"]
 for index in range(len(links)):
@@ -50,13 +50,15 @@ for index in range(len(links)):
 
 addresses = [link.text for link in link_tags if link.get("tabindex") == "0"]
 
+# Extract property prices from the web page
 price_tags = soup.select('span[data-test="property-card-price"]')
 prices = [price.text.split("/")[0].split("+")[0] for price in price_tags]
 
-# open the form and type in the data for each item in the previously collected lists
+# Open the Google Form in Chrome using Selenium WebDriver
 driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get(FORM_URL)
 
+# Fill in the form with property details
 for n in range(len(links)):
     time.sleep(2)
     address_input = driver.find_element(By.XPATH, '//*[@id="mG61Hd"]/div[2]/div/div[2]/div[1]/div/div/div[2]/div/div[1]/div/div[1]/input')
